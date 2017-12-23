@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>Document</title>
+    <style>
+        #game {
+            display: block;
+            background: #fafafa;
+            margin: 100px auto;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+<canvas id="game" height="400" width="400">
+    Your browser does not support the HTML5 canvas tag.
+</canvas>
+<script type="text/javascript">
+    var obj = [
+        ['red', 'red', 'blue', 'blue', 'green', 'yellow', 'blue', 'yellow', 'red', 'purple'],
+        ['green', 'blue', 'green', 'blue', 'red', 'purple', 'red', 'yellow', 'yellow', 'blue'],
+        ['blue', 'purple', 'red', 'yellow', 'yellow', 'purple', 'blue', 'green', 'green', 'blue'],
+        ['yellow', 'yellow', 'blue', 'yellow', 'blue', 'red', 'purple', 'green', 'green', 'red'],
+        ['yellow', 'green', 'blue', 'blue', 'purple', 'green', 'purple', 'red', 'yellow', 'blue'],
+        ['purple', 'yellow', 'red', 'red', 'yellow', 'red', 'purple', 'yellow', 'red', 'red'],
+        ['yellow', 'red', 'green', 'purple', 'green', 'red', 'blue', 'yellow', 'blue', 'green'],
+        ['red', 'green', 'blue', 'blue', 'yellow', 'green', 'purple', 'red', 'blue', 'green'],
+        ['green', 'green', 'yellow', 'yellow', 'red', 'red', 'purple', 'blue', 'blue', 'green'],
+        ['purple', 'red', 'red', 'red', 'purple', 'yellow', 'blue', 'red', 'red', 'green']
+    ];
+    function clickDiamond(x, y) {
+        console.log('click:' + obj[x][y] + ' x:' + x + ' y:' + y);
+        function up(x, y) {//获取上边方块值
+            if (x == 0) return false;
+            return obj[x - 1][y];
+        }
+
+        function down(x, y) {//获取下边方块值
+            if (x == 9) return false;
+            return obj[x + 1][y];
+        }
+
+        function left(x, y) {//获取左边方块值
+            if (y == 0) return false;
+            return obj[x][y - 1];
+        }
+
+        function right(x, y) {//获取右边方块值
+            if (y == 9) return false;
+            return obj[x][y + 1];
+        }
+
+        function moveLeft() {//方块整体向左移动
+            if (x == 9 || x == 8) {//只有点击的是第10行或第9行的方块，才有可能出现左侧列或者右侧列全部空出的情况
+                var arr = [];
+                for (var b = 0; b < 10; b++) {
+                    if (typeof(obj[9][b]) == 'undefined') {
+                        arr.push(b);
+                    }
+                }
+                for (var l = 0, len = arr.length; l < len; l++) {
+                    //整体左移
+                    var temp;
+                    for (var m = 0; m < 10; m++) {
+                        for (var n = arr[l]; n < 10; n++) {
+                            temp = obj[m][n];
+                            obj[m][n] = obj[m][n + 1];
+                            obj[m][n + 1] = temp;
+                        }
+                        obj[m].length = 10;//补全右侧缺失
+                    }
+                }
+            }
+        }
+
+        function moveDown() {//方块向下移动
+            //点击一次 只可能当前点击列和左列和右列出现上下调整
+            //先取出这三列
+            var middleCol = [], leftCol = [], rightCol = [];
+            for (var j = 9; j >= 0; j--) {//当前列
+                middleCol.push(obj[j][y]);
+            }
+            middleCol = middleCol.filter(function (item) {//剔除undefined
+                return item !== undefined;
+            });
+            middleCol.length = 10;//补全数组
+            for (j = 0; j < 10; j++) {//还原obj数组
+                obj[j][y] = middleCol.pop();
+            }
+            if (y > 0) {//如果有左列
+                for (j = 9; j >= 0; j--) {//当前列
+                    leftCol.push(obj[j][y - 1]);
+                }
+                leftCol = leftCol.filter(function (item) {
+                    return item != undefined;
+                });
+                leftCol.length = 10;
+                for (j = 0; j < 10; j++) {//还原obj数组
+                    obj[j][y - 1] = leftCol.pop();
+                }
+            }
+            if (y < 9) {//如果有右列
+                for (j = 9; j >= 0; j--) {//当前列
+                    rightCol.push(obj[j][y + 1]);
+                }
+                rightCol = rightCol.filter(function (item) {
+                    return item != undefined;
+                });
+                rightCol.length = 10;
+                for (j = 0; j < 10; j++) {//还原obj数组
+                    obj[j][y + 1] = rightCol.pop();
+                }
+            }
+        }
+
+        function clear() {//消除函数
+            var hasSameColor = false;
+            if (up(x, y) === obj[x][y]) {//全等 因为false==0
+                obj[x - 1][y] = undefined;
+                hasSameColor = true;
+            }
+            if (down(x, y) === obj[x][y]) {
+                obj[x + 1][y] = undefined;
+                hasSameColor = true;
+            }
+            if (left(x, y) === obj[x][y]) {
+                obj[x][y - 1] = undefined;
+                hasSameColor = true;
+            }
+            if (right(x, y) === obj[x][y]) {
+                obj[x][y + 1] = undefined;
+                hasSameColor = true;
+            }
+            if (hasSameColor == true) {//如果上下左右存在相同色块，消除自己
+                obj[x][y] = undefined;
+                //向下移动
+                moveDown();
+                //向左移动
+                moveLeft();
+            }
+        }
+
+        clear();
+
+        var str = obj.join();
+        var red = str.match(/red/g).length;
+        var green = str.match(/green/g).length;
+        var blue = str.match(/blue/g).length;
+        var yellow = str.match(/yellow/g).length;
+        var purple = str.match(/purple/g).length;
+        console.log('当前剩余色块：' + 'red：' + red + ' green：' + green + ' blue：' + blue + ' yellow：' + yellow + ' purple：' + purple);
+    }
+    var canvas = document.getElementById('game');
+    var ctx = canvas.getContext('2d');
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.shadowColor = "black";
+    function drawDiamond(color, x, y) {//绘制一个方块
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, 40, 40);
+    }
+    function drawBoard() {//绘制整个画布
+        for (var x = 0; x < 10; x++) {
+            for (var y = 0; y < 10; y++) {
+                var color = obj[x][y] ? obj[x][y] : 'white';
+                drawDiamond(color, y * 40, x * 40);
+            }
+        }
+    }
+    drawBoard();//首次canvas绘画
+    canvas.onclick = function (e) {//添加点击事件
+        var x = e.offsetX;
+        var y = e.offsetY;
+        x = Math.ceil(x / 40) - 1;
+        y = Math.ceil(y / 40) - 1;
+        clickDiamond(y, x);
+        drawBoard();
+    }
+</script>
+</body>
+</html>
